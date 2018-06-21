@@ -152,7 +152,10 @@ public class SQLiteConnection: Connection {
         }
     }
 
-    public func connectSync(onCompletion: @escaping (QueryError?) -> ()) {
+    /// Establish a connection with the database.
+    ///
+    /// - Returns: A QueryError if the connection cannot connect, otherwise nil
+    public func connectSync() -> QueryError? {
         var error: QueryError?
         let semaphore = DispatchSemaphore(value: 0)
         connect { err in
@@ -160,7 +163,11 @@ public class SQLiteConnection: Connection {
             semaphore.signal()
         }
         semaphore.wait()
-        onCompletion(error)
+        guard let errorUnwrapped = error else {
+            // Everything worked
+            return nil
+        }
+        return errorUnwrapped
     }
 
     /// Return a String representation of the query.
@@ -194,7 +201,7 @@ public class SQLiteConnection: Connection {
     ///
     /// - Parameter query: The query to execute.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func executeSync(query: Query, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(query: Query) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(query: query) { res in
@@ -203,10 +210,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a raw query.
@@ -223,7 +229,7 @@ public class SQLiteConnection: Connection {
     ///
     /// - Parameter query: A String with the query to execute.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func executeSync(_ raw: String, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(_ raw: String) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(raw) { res in
@@ -232,10 +238,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a query with parameters.
@@ -254,7 +259,7 @@ public class SQLiteConnection: Connection {
     /// - Parameter query: The query to execute.
     /// - Parameter parameters: An array of the parameters.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func executeSync(query: Query, parameters: [Any?], onCompletion: (@escaping (QueryResult) -> ())) {
+    public func executeSync(query: Query, parameters: [Any?]) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(query: query, parameters: parameters) { res in
@@ -263,10 +268,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a raw query with parameters.
@@ -285,7 +289,7 @@ public class SQLiteConnection: Connection {
     /// - Parameter query: A String with the query to execute.
     /// - Parameter parameters: An array of the parameters.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func executeSync(_ raw: String, parameters: [Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(_ raw: String, parameters: [Any?]) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(raw, parameters: parameters) { res in
@@ -294,10 +298,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a query with parameters.
@@ -316,7 +319,7 @@ public class SQLiteConnection: Connection {
     /// - Parameter query: The query to execute.
     /// - Parameter parameters: A dictionary of the parameters with parameter names as the keys.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func executeSync(query: Query, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(query: Query, parameters: [String:Any?]) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(query: query, parameters: parameters) { res in
@@ -325,10 +328,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a raw query with parameters.
@@ -347,7 +349,7 @@ public class SQLiteConnection: Connection {
     /// - Parameter query: A String with the query to execute.
     /// - Parameter parameters: A dictionary of the parameters with parameter names as the keys.
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
-    public func executeSync(_ raw: String, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(_ raw: String, parameters: [String:Any?]) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(raw, parameters: parameters) { res in
@@ -356,10 +358,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     private func execute(query: Query, parameters: [Any?], namedParameters: [String:Any?], onCompletion: (@escaping (QueryResult) -> ())) {
@@ -412,7 +413,7 @@ public class SQLiteConnection: Connection {
     ///
     /// - Parameter preparedStatement: The prepared statement to execute.
     /// - Parameter onCompletion: The function to be called when the execution has completed.
-    public func executeSync(preparedStatement: PreparedStatement, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(preparedStatement: PreparedStatement) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(preparedStatement: preparedStatement) { res in
@@ -421,10 +422,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a prepared statement with parameters.
@@ -443,7 +443,7 @@ public class SQLiteConnection: Connection {
     /// - Parameter preparedStatement: The prepared statement to execute.
     /// - Parameter parameters: An array of the parameters.
     /// - Parameter onCompletion: The function to be called when the execution has completed.
-    public func executeSync(preparedStatement: PreparedStatement, parameters: [Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(preparedStatement: PreparedStatement, parameters: [Any?]) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(preparedStatement: preparedStatement, parameters: parameters) { res in
@@ -452,10 +452,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Execute a prepared statement with parameters.
@@ -474,7 +473,7 @@ public class SQLiteConnection: Connection {
     /// - Parameter preparedStatement: The prepared statement to execute.
     /// - Parameter parameters: A dictionary of the parameters with parameter names as the keys.
     /// - Parameter onCompletion: The function to be called when the execution has completed.
-    public func executeSync(preparedStatement: PreparedStatement, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+    public func executeSync(preparedStatement: PreparedStatement, parameters: [String:Any?]) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         execute(preparedStatement: preparedStatement, parameters: parameters) { res in
@@ -483,10 +482,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     private func execute(preparedStatement: PreparedStatement, parameters: [Any?], namedParameters: [String:Any?], onCompletion: (@escaping (QueryResult) -> ())) {
@@ -512,7 +510,7 @@ public class SQLiteConnection: Connection {
         }
     }
 
-    public func releaseSync(preparedStatement: PreparedStatement, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func releaseSync(preparedStatement: PreparedStatement) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         release(preparedStatement: preparedStatement) { res in
@@ -521,10 +519,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     private func prepareSQLiteStatement(query: String) -> (OpaquePointer?, Int32) {
@@ -631,7 +628,7 @@ public class SQLiteConnection: Connection {
     /// Start a transaction.
     ///
     /// - Parameter onCompletion: The function to be called when the execution of start transaction command has completed.
-    public func startTransactionSync(onCompletion: @escaping ((QueryResult) -> ())) {
+    public func startTransactionSync() -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         startTransaction() { res in
@@ -640,10 +637,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Commit the current transaction.
@@ -658,7 +654,7 @@ public class SQLiteConnection: Connection {
     /// Commit the current transaction.
     ///
     /// - Parameter onCompletion: The function to be called when the execution of commit transaction command has completed.
-    public func commitSync(onCompletion: @escaping ((QueryResult) -> ())) {
+    public func commitSync() -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         commit() { res in
@@ -667,10 +663,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Rollback the current transaction.
@@ -685,7 +680,7 @@ public class SQLiteConnection: Connection {
     /// Rollback the current transaction.
     ///
     /// - Parameter onCompletion: The function to be called when the execution of rolback transaction command has completed.
-    public func rollbackSync(onCompletion: @escaping ((QueryResult) -> ())) {
+    public func rollbackSync() -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         rollback() { res in
@@ -694,10 +689,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Create a savepoint.
@@ -714,7 +708,7 @@ public class SQLiteConnection: Connection {
     ///
     /// - Parameter savepoint: The name to  be given to the created savepoint.
     /// - Parameter onCompletion: The function to be called when the execution of create savepoint command has completed.
-    public func createSync(savepoint: String, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func createSync(savepoint: String) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         create(savepoint: savepoint) { res in
@@ -723,10 +717,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Rollback the current transaction to the specified savepoint.
@@ -743,7 +736,7 @@ public class SQLiteConnection: Connection {
     ///
     /// - Parameter to savepoint: The name of the savepoint to rollback to.
     /// - Parameter onCompletion: The function to be called when the execution of rolback transaction command has completed.
-    public func rollbackSync(to savepoint: String, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func rollbackSync(to savepoint: String) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         rollback(to: savepoint) { res in
@@ -752,10 +745,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     /// Release a savepoint.
@@ -772,7 +764,7 @@ public class SQLiteConnection: Connection {
     ///
     /// - Parameter savepoint: The name of the savepoint to release.
     /// - Parameter onCompletion: The function to be called when the execution of release savepoint command has completed.
-    public func releaseSync(savepoint: String, onCompletion: @escaping ((QueryResult) -> ())) {
+    public func releaseSync(savepoint: String) -> QueryResult {
         var result: QueryResult?
         let semaphore = DispatchSemaphore(value: 0)
         release(savepoint: savepoint) { res in
@@ -781,10 +773,9 @@ public class SQLiteConnection: Connection {
         }
         semaphore.wait()
         guard let resultUnwrapped = result else {
-            onCompletion(.error(QueryError.noResult("No ResultSet from execute")))
-            return
+            return (.error(QueryError.noResult("No ResultSet from execute")))
         }
-        onCompletion(resultUnwrapped)
+        return resultUnwrapped
     }
 
     private func executeTransaction(command: String, inTransaction: Bool, changeTransactionState: Bool, errorMessage: String, onCompletion: @escaping ((QueryResult) -> ())) {
