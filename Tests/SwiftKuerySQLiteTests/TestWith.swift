@@ -86,7 +86,7 @@ class TestWith: XCTestCase {
         performTest(asyncTasks: { expectation in
 
             let semaphore = DispatchSemaphore(value: 0)
-            
+
             guard let connection = pool.getConnection() else {
                 XCTFail("Failed to get connection")
                 return
@@ -197,6 +197,8 @@ class TestWith: XCTestCase {
                                 }
                             }
                         }
+                    } else {
+                        semaphore.signal()
                     }
                 }
             }
