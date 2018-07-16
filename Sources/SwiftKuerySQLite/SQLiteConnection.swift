@@ -22,6 +22,7 @@ import SwiftKuery
 #endif
 
 import Foundation
+import Dispatch
 
 let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
