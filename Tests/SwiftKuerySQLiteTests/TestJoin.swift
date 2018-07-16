@@ -66,6 +66,8 @@ class TestJoin: XCTestCase {
         
         let pool = CommonUtils.sharedInstance.getConnectionPool()
         performTest(asyncTasks: { expectation in
+
+            let semaphore = DispatchSemaphore(value: 0)
             
             guard let connection = pool.getConnection() else {
                 XCTFail("Failed to get connection")
@@ -157,6 +159,7 @@ class TestJoin: XCTestCase {
                                                                 let resultSet = result.asResultSet!
                                                                 XCTAssertEqual(rows!.count, 4, "SELECT returned wrong number of rows: \(rows!.count) instead of 4")
                                                                 XCTAssertEqual(resultSet.titles.count, 3, "SELECT returned wrong number of columns: \(resultSet.titles.count) instead of 3")
+                                                                semaphore.signal()
                                                             }
                                                         }
                                                     }
@@ -170,6 +173,7 @@ class TestJoin: XCTestCase {
                     }
                 }
             }
+            semaphore.wait()
             expectation.fulfill()
         })
     }
@@ -181,6 +185,8 @@ class TestJoin: XCTestCase {
         
         let pool = CommonUtils.sharedInstance.getConnectionPool()
         performTest(asyncTasks: { expectation in
+
+            let semaphore = DispatchSemaphore(value: 0)
             
             guard let connection = pool.getConnection() else {
                 XCTFail("Failed to get connection")
@@ -231,6 +237,7 @@ class TestJoin: XCTestCase {
                                                     let resultSet = result.asResultSet!
                                                     XCTAssertEqual(rows!.count, 5, "SELECT returned wrong number of rows: \(rows!.count) instead of 5")
                                                     XCTAssertEqual(resultSet.titles.count, 1, "SELECT returned wrong number of columns: \(resultSet.titles.count) instead of 1")
+                                                    semaphore.signal()
                                                 }
                                             }
                                         }
@@ -241,6 +248,7 @@ class TestJoin: XCTestCase {
                     }
                 }
             }
+            semaphore.wait()
             expectation.fulfill()
         })
     }
