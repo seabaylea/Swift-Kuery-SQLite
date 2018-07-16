@@ -149,7 +149,7 @@ public class SQLiteConnection: Connection {
                 // Set the busy timeout to 200 milliseconds.
                 sqlite3_busy_timeout(self.connection, 200)
             }
-            onCompletion(queryError)
+            self.runCompletionHandler(queryError, onCompletion: onCompletion)
         }
     }
 
@@ -370,10 +370,10 @@ public class SQLiteConnection: Connection {
             execute(sqliteQuery: sqliteQuery, parameters: parameters, namedParameters: namedParameters, onCompletion: onCompletion)
         }
         catch QueryError.syntaxError(let error) {
-            onCompletion(.error(QueryError.syntaxError(error)))
+            runCompletionHandler(.error(QueryError.syntaxError(error)), onCompletion: onCompletion)
         }
         catch {
-            onCompletion(.error(QueryError.syntaxError("Failed to build the query")))
+            runCompletionHandler(.error(QueryError.syntaxError("Failed to build the query")), onCompletion: onCompletion)
         }
     }
 
@@ -503,11 +503,11 @@ public class SQLiteConnection: Connection {
     public func release(preparedStatement: PreparedStatement, onCompletion: @escaping ((QueryResult) -> ())) {
         DispatchQueue.global().async {
             guard let statement = preparedStatement as? SQLitePreparedStatement else {
-                onCompletion(.error(QueryError.unsupported("Failed to execute unsupported prepared statement")))
+                self.runCompletionHandler(.error(QueryError.unsupported("Failed to execute unsupported prepared statement")), onCompletion: onCompletion)
                 return
             }
             sqlite3_finalize(statement.statement)
-            onCompletion(.successNoData)
+            self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
         }
     }
 
@@ -807,6 +807,17 @@ public class SQLiteConnection: Connection {
     private func runCompletionHandler(_ queryResult: QueryResult, onCompletion: @escaping ((QueryResult) -> ())) {
         DispatchQueue.global().async {
             onCompletion(queryResult)
+        }
+        setConnectionPoolWrapper(to: nil)
+    }
+
+    private func runCompletionHandler(_ queryError: QueryError?, onCompletion: @escaping ((QueryError?) -> ())) {
+        DispatchQueue.global().async {
+            guard queryError != nil else {
+                onCompletion(nil)
+                return
+            }
+            onCompletion(queryError)
         }
         setConnectionPoolWrapper(to: nil)
     }
